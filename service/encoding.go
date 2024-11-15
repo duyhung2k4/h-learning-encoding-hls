@@ -4,17 +4,24 @@ import (
 	"app/config"
 	"app/constant"
 	"app/dto/queuepayload"
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
-type encodingService struct{}
+type encodingService struct {
+	connRabbitmq *amqp091.Connection
+}
 
 type EncodingService interface {
+	SendMessHandleSuccess(payload queuepayload.QueueMp4QuantityPayload) error
 	DownloadFileMp4(payload queuepayload.QueueMp4QuantityPayload) error
 	Encoding(uuid string) error
 }
@@ -89,6 +96,41 @@ func (s *encodingService) Encoding(uuid string) error {
 	return nil
 }
 
+func (s *encodingService) SendMessHandleSuccess(payload queuepayload.QueueMp4QuantityPayload) error {
+	ch, err := s.connRabbitmq.Channel()
+
+	if err != nil {
+		return err
+	}
+
+	payloadMess := queuepayload.QueueFileM3U8Payload{
+		Path:     fmt.Sprintf("encoding/%s", payload.Uuid),
+		IpServer: fmt.Sprintf("http://%s:%s/api/v1", config.GetAppHost(), config.GetAppPort()),
+		Uuid:     payload.Uuid,
+		Quantity: constant.QUANTITY_MAP[config.GetQueueQuantity()].Resolution,
+	}
+
+	payloadJsonString, err := json.Marshal(payloadMess)
+	if err != nil {
+		return err
+	}
+
+	ch.PublishWithContext(context.Background(),
+		"",
+		string(constant.QUEUE_FILE_M3U8),
+		false,
+		false,
+		amqp091.Publishing{
+			ContentType: "application/json",
+			Body:        payloadJsonString,
+		},
+	)
+
+	return nil
+}
+
 func NewEncodingService() EncodingService {
-	return &encodingService{}
+	return &encodingService{
+		connRabbitmq: config.GetRabbitmq(),
+	}
 }

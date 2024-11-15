@@ -78,6 +78,13 @@ func (q *queueMp4Quantity) Worker() {
 			continue
 		}
 
+		err = q.encodingService.SendMessHandleSuccess(payload)
+		if err != nil {
+			log.Println("error send mess encoding success: ", err)
+			d.Reject(true)
+			continue
+		}
+
 		d.Ack(false)
 	}
 }
