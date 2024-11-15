@@ -115,7 +115,7 @@ func (s *encodingService) SendMessHandleSuccess(payload queuepayload.QueueMp4Qua
 		return err
 	}
 
-	ch.PublishWithContext(context.Background(),
+	err = ch.PublishWithContext(context.Background(),
 		"",
 		string(constant.QUEUE_FILE_M3U8),
 		false,
@@ -125,6 +125,16 @@ func (s *encodingService) SendMessHandleSuccess(payload queuepayload.QueueMp4Qua
 			Body:        payloadJsonString,
 		},
 	)
+
+	if err != nil {
+		return err
+	}
+
+	fileDelete := fmt.Sprintf("video/%s.mp4", payload.Uuid)
+	err = os.RemoveAll(fileDelete)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
