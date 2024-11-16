@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/config"
+	"app/job"
 	"app/queue"
 	"app/router"
 	"log"
@@ -11,11 +12,16 @@ import (
 
 func main() {
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
 		queue.InitQueue()
+	}()
+
+	go func() {
+		defer wg.Done()
+		job.InitJob()
 	}()
 
 	go func() {
