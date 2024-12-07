@@ -93,6 +93,8 @@ func (s *encodingService) Encoding(uuid string) error {
 		return err
 	}
 
+	os.RemoveAll(mp4File)
+
 	return nil
 }
 
