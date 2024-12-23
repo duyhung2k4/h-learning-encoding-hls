@@ -1,7 +1,7 @@
-package job
+package jobapp
 
 import (
-	"app/constant"
+	constant "app/internal/constants"
 	"log"
 
 	"github.com/robfig/cron/v3"

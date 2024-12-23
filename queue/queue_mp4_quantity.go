@@ -1,9 +1,9 @@
 package queue
 
 import (
-	"app/config"
-	"app/dto/queuepayload"
-	"app/service"
+	"app/cmd/encoding-service/service"
+	"app/internal/connection"
+	queuepayload "app/internal/dto/queue_payload"
 	"encoding/json"
 	"log"
 
@@ -11,15 +11,15 @@ import (
 )
 
 type queueMp4Quantity struct {
-	encodingService service.EncodingService
+	service service.Service
 }
 type QueueMp4Quantity interface {
 	Worker()
 }
 
 func (q *queueMp4Quantity) Worker() {
-	queueName := config.GetQueueQuantity()
-	conn := config.GetRabbitmq()
+	queueName := connection.GetConnect().QueueQuantity
+	conn := connection.GetRabbitmq()
 	ch, err := conn.Channel()
 	if err != nil {
 		log.Println("error chanel: ", err)
@@ -64,21 +64,21 @@ func (q *queueMp4Quantity) Worker() {
 			continue
 		}
 
-		err = q.encodingService.DownloadFileMp4(payload)
+		err = q.service.EncodingService.DownloadFileMp4(payload)
 		if err != nil {
 			log.Println("error download mp4: ", err)
 			d.Reject(false)
 			continue
 		}
 
-		err = q.encodingService.Encoding(payload.Uuid)
+		err = q.service.EncodingService.Encoding(payload.Uuid)
 		if err != nil {
 			log.Println("error encoding hls: ", err)
 			d.Reject(false)
 			continue
 		}
 
-		err = q.encodingService.SendMessHandleSuccess(payload)
+		err = q.service.EncodingService.SendMessHandleSuccess(payload)
 		if err != nil {
 			log.Println("error send mess encoding success: ", err)
 			d.Reject(false)
@@ -91,6 +91,6 @@ func (q *queueMp4Quantity) Worker() {
 
 func NewQueueMp4Quantity() QueueMp4Quantity {
 	return &queueMp4Quantity{
-		encodingService: service.NewEncodingService(),
+		service: service.Register(),
 	}
 }

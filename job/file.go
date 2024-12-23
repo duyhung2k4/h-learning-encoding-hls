@@ -1,9 +1,9 @@
-package job
+package jobapp
 
 import (
-	"app/config"
-	"app/constant"
-	"app/model"
+	"app/internal/connection"
+	constant "app/internal/constants"
+	"app/internal/entity"
 	"fmt"
 	"log"
 	"os"
@@ -21,7 +21,7 @@ type FileJob interface {
 }
 
 func (j *fileJob) DeleteDirEncoding() {
-	listDir, err := os.ReadDir("encoding")
+	listDir, err := os.ReadDir("cmd/encoding-service/data/encoding")
 	if err != nil {
 		log.Println("error get list file: ", err)
 		return
@@ -36,12 +36,12 @@ func (j *fileJob) DeleteDirEncoding() {
 		listUuid = append(listUuid, uuid)
 	}
 
-	quantity := constant.QUANTITY_MAP[config.GetQueueQuantity()]
+	quantity := constant.QUANTITY_MAP[connection.GetConnect().QueueQuantity]
 	fieldQuantity := fmt.Sprintf("url%s", quantity.Resolution)
 
-	var listVideoLession []model.VideoLession
+	var listVideoLession []entity.VideoLession
 	err = j.psql.
-		Model(&model.VideoLession{}).
+		Model(&entity.VideoLession{}).
 		Where(`
 			code IN ?
 			AND ? IS NOT NULL
@@ -54,7 +54,7 @@ func (j *fileJob) DeleteDirEncoding() {
 
 	listError := []error{}
 	for _, v := range listVideoLession {
-		path := fmt.Sprintf("encoding/%s", v.Code)
+		path := fmt.Sprintf("cmd/encoding-service/data/encoding/%s", v.Code)
 		err := os.RemoveAll(path)
 		if err != nil {
 			listError = append(listError, err)
@@ -72,6 +72,6 @@ func (j *fileJob) DeleteDirEncoding() {
 
 func NewFileJob() FileJob {
 	return &fileJob{
-		psql: config.GetPsql(),
+		psql: connection.GetPsql(),
 	}
 }
