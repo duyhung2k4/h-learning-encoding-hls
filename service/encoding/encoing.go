@@ -33,7 +33,7 @@ func (s *encodingService) Encoding(uuid string) error {
 		log.Fatal(err)
 	}
 
-	outputFile := fmt.Sprintf("data/video/%s/%s/%s_%s.m3u8", uuid, quantity.Resolution, uuid, quantity.Resolution)
+	outputFile := fmt.Sprintf("data/video/%s/%s/index.m3u8", uuid, quantity.Resolution)
 	hlsCmd := exec.Command("ffmpeg",
 		"-i", mp4File, // Đường dẫn đến file video đã upload uploads/uploaded_video.mp4
 		"-vf", fmt.Sprintf("scale=%s", quantity.Scale), // Chỉnh sửa kích thước video
