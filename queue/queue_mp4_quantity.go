@@ -64,23 +64,9 @@ func (q *queueMp4Quantity) Worker() {
 			continue
 		}
 
-		err = q.service.EncodingService.DownloadFileMp4(payload)
-		if err != nil {
-			log.Println("error download mp4: ", err)
-			d.Reject(false)
-			continue
-		}
-
 		err = q.service.EncodingService.Encoding(payload.Uuid)
 		if err != nil {
 			log.Println("error encoding hls: ", err)
-			d.Reject(false)
-			continue
-		}
-
-		err = q.service.EncodingService.SendMessHandleSuccess(payload)
-		if err != nil {
-			log.Println("error send mess encoding success: ", err)
 			d.Reject(false)
 			continue
 		}
